@@ -1,0 +1,41 @@
+#!/bin/bash
+
+project=${PWD##*/}
+workdir=$PWD
+function dockerKill(){
+    docker kill $(docker ps -q)
+    docker system prune --force
+}
+function dockerBuild(){
+    docker volume create --driver local --opt type=bind --opt device=$workdir $project
+    cd $workdir
+    docker build -t $project .
+}
+
+function dockerRun(){
+    docker run\
+    -dit\
+    -v $workdir:/$project\
+    --name $project\
+    $project
+}
+
+function dockerSSH(){
+    docker exec -it $project /bin/bash
+}
+
+if [ "$1" = "kill" ]; then
+    dockerKill
+elif [ "$1" = "build" ]; then
+    dockerBuild
+elif [ "$1" = "run" ]; then
+    dockerRun
+elif [ "$1" = "restart" ]; then
+    dockerKill
+    dockerBuild
+    dockerRun
+elif [ "$1" = "ssh" ]; then
+    dockerSSH
+else
+    echo "No recognized argument"
+fi

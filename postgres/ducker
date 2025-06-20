@@ -1,0 +1,46 @@
+#!/bin/bash
+
+project=${PWD##*/}
+workdir=$PWD
+function dockerKill(){
+    docker kill $project
+    docker remove $project
+}
+function dockerBuild(){
+    docker volume create --driver local --opt type=bind --opt device=$workdir $project
+    cd $workdir
+    docker build -t $project .
+}
+
+function dockerRun(){
+    docker run\
+    -dit\
+    -e POSTGRES_PASSWORD=somepass\
+    -p 5432:5432\
+    -v $workdir:/$project\
+    --name $project\
+    $project
+}
+
+function dockerSSH(){
+    docker exec -it $project /bin/bash
+}
+
+if [ "$1" = "kill" ]; then
+    dockerKill
+elif [ "$1" = "build" ]; then
+    dockerBuild
+elif [ "$1" = "run" ]; then
+    dockerBuild
+    dockerRun
+elif [ "$1" = "start" ]; then
+    dockerRun
+elif [ "$1" = "restart" ]; then
+    dockerKill
+    dockerBuild
+    dockerRun
+elif [ "$1" = "ssh" ]; then
+    dockerSSH
+else
+    echo "no recognized argument"
+fi
