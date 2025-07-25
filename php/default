@@ -1,7 +1,7 @@
 server {
 
     listen  80;
-    root /php;
+    root /php/public;
     index index.php index.html index.html;
     server_name 127.0.0.1;
 
